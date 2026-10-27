@@ -4,13 +4,12 @@
 //
 //  WHAT THIS GAME DOES NOW
 //  You pick rock, paper or scissors. The computer picks one at random.
-//  The app shows both moves and counts how many rounds you have played.
-//  It can tell when a round is a tie.
-//
-//  WHAT IT DOES NOT DO YET
-//  When the two moves are different, it only says "Someone won".
-//  It does not know who!
-//  Rock beats scissors, scissors beats paper, and paper beats rock.
+//  The app shows both moves and decides who wins each round.
+//  NEW: It keeps a score. The first player to reach winningScore wins the game.
+//  NEW: When the game is over, the move buttons stop working and a
+//  "Play again" button appears. It starts a fresh game.
+//  NEW: The result text changes colour: green for a win, red for a loss.
+//  NEW: testNumber can fix the computer's move so tests give the same result every time.
 //
 
 import SwiftUI
@@ -20,6 +19,13 @@ import SwiftUI
 let rockEmoji: String = "🪨"
 let paperEmoji: String = "📄"
 let scissorsEmoji: String = "✂️"
+
+// How many round wins a player needs to win the whole game.
+let winningScore: Int = 3
+
+// For testing only. 0 means the computer picks at random.
+// Set it to 1 (Rock), 2 (Paper) or 3 (Scissors) to make the computer always pick that move.
+let testNumber: Int = 0
 
 // The game itself: what it remembers, what it shows on the screen,
 // and what it does when you click a button.
@@ -40,8 +46,20 @@ struct RockPaperScissorsView: View {
     // What happened in the last round.
     @State var result: String = "Let's play!"
 
+    // The colour of the result text. It changes with each result.
+    @State var resultColor: Color = Color.primary
+
     // How many rounds have been played.
     @State var roundsPlayed: Int = 0
+
+    // How many rounds the player has won in this game.
+    @State var playerScore: Int = 0
+
+    // How many rounds the computer has won in this game.
+    @State var computerScore: Int = 0
+
+    // True once someone has reached winningScore. The move buttons stop working.
+    @State var gameOver: Bool = false
 
     // MARK: - Computed properties
 
@@ -56,6 +74,14 @@ struct RockPaperScissorsView: View {
                 // Shrink the title a little if it does not fit on one line.
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
+
+            // The score and the goal.
+            Text("You \(playerScore) - \(computerScore) Computer")
+                .font(.title2)
+                .bold()
+            Text("First to \(winningScore) wins")
+                .font(.subheadline)
+                .foregroundStyle(Color.secondary)
 
             Spacer()
 
@@ -93,6 +119,9 @@ struct RockPaperScissorsView: View {
             Text(result)
                 .font(.largeTitle)
                 .bold()
+                .foregroundStyle(resultColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
 
             Spacer()
 
@@ -140,6 +169,17 @@ struct RockPaperScissorsView: View {
             .font(.headline)
             // TRY: Change teal to another colour. Change it in the title and the moves box too.
             .tint(Color.teal)
+            // The buttons cannot be clicked when the game is over.
+            .disabled(gameOver)
+
+            // This button only appears when the game is over.
+            if gameOver {
+                Button("Play again") {
+                    resetGame()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color.teal)
+            }
 
             Text("Rounds played: \(roundsPlayed)")
                 .font(.headline)
@@ -178,7 +218,12 @@ struct RockPaperScissorsView: View {
     func chooseComputerMove() {
 
         // Pick 1, 2 or 3. Each number stands for one move.
-        let randomNumber: Int = Int.random(in: 1...3)
+        var randomNumber: Int = Int.random(in: 1...3)
+
+        // When testing, testNumber replaces the random number.
+        if testNumber >= 1 && testNumber <= 3 {
+            randomNumber = testNumber
+        }
 
         if randomNumber == 1 {
             computerMove = "Rock"
@@ -192,19 +237,64 @@ struct RockPaperScissorsView: View {
         }
     }
 
+    // Decides who wins a round. It gives back "player", "computer" or "tie".
+    // player and computer are the names of the two moves, such as "Rock".
+    func decideWinner(player: String, computer: String) -> String {
+        if player == computer {
+            return "tie"
+        } else if (player == "Rock" && computer == "Scissors")
+                    || (player == "Scissors" && computer == "Paper")
+                    || (player == "Paper" && computer == "Rock") {
+            return "player"
+        } else {
+            return "computer"
+        }
+    }
+
     // Plays one round, once the player has picked a move.
     func playRound() {
         chooseComputerMove()
         roundsPlayed += 1
 
-        if playerMove == computerMove {
+        let winner: String = decideWinner(player: playerMove, computer: computerMove)
+
+        if winner == "tie" {
             // TRY: Change what the game says when there is a tie.
             result = "It's a tie!"
+            resultColor = Color.secondary
+        } else if winner == "player" {
+            playerScore += 1
+            result = "You win this round!"
+            resultColor = Color.green
         } else {
-            // This is where the game needs your help.
-            // Who won: you, or the computer?
-            result = "Someone won"
+            computerScore += 1
+            result = "Computer wins this round!"
+            resultColor = Color.red
         }
+
+        // Check whether someone has reached the winning score.
+        if playerScore >= winningScore || computerScore >= winningScore {
+            gameOver = true
+            if playerScore >= winningScore {
+                result = "You won the game! 🎉"
+            } else {
+                result = "The computer won the game."
+            }
+        }
+    }
+
+    // Starts a brand new game. Everything goes back to how it was at the start.
+    func resetGame() {
+        playerMove = "No move yet"
+        playerEmoji = "❓"
+        computerMove = "No move yet"
+        computerEmoji = "❓"
+        result = "Let's play!"
+        resultColor = Color.primary
+        roundsPlayed = 0
+        playerScore = 0
+        computerScore = 0
+        gameOver = false
     }
 }
 
