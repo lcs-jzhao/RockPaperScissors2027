@@ -3,28 +3,39 @@
 //  RockPaperScissors
 //
 //  WHAT THIS GAME DOES NOW
-//  You pick rock, paper or scissors. The computer picks one at random.
+//  You pick a move. The computer picks one at random.
 //  The app shows both moves and decides who wins each round.
-//  NEW: It keeps a score. The first player to reach winningScore wins the game.
-//  NEW: When the game is over, the move buttons stop working and a
-//  "Play again" button appears. It starts a fresh game.
-//  NEW: The result text changes colour: green for a win, red for a loss.
-//  NEW: testNumber can fix the computer's move so tests give the same result every time.
+//  It keeps a score. The first player to reach winningScore wins the game.
+//  When the game is over, the move buttons stop working and a
+//  button appears to start a fresh game.
+//  The result text changes colour: green for a win, red for a loss.
+//  testNumber can fix the computer's move so tests give the same result every time.
+//  NEW: Magic theme. The moves are Dragon (rock), Spellbook (paper) and Wand (scissors).
+//  The names, emoji, title and colour are constants at the top of the file.
+//  NEW: Streaks. The screen shows your current winning streak and your best streak.
 //
 
 import SwiftUI
 
-// The picture for each move. These are emoji, so they are just text.
-// TRY: Change these to other emoji to give the game a new theme.
-let rockEmoji: String = "🪨"
-let paperEmoji: String = "📄"
-let scissorsEmoji: String = "✂️"
+// The theme: the name and the picture for each move.
+// Dragon plays the part of rock, Spellbook of paper, and Wand of scissors.
+// TRY: Change these to give the game a new theme.
+let rockName: String = "Dragon"
+let paperName: String = "Spellbook"
+let scissorsName: String = "Wand"
+let rockEmoji: String = "🐉"
+let paperEmoji: String = "📖"
+let scissorsEmoji: String = "🪄"
+
+// The title and the main colour of the game.
+let gameTitle: String = "Magic Duel"
+let themeColor: Color = Color.purple
 
 // How many round wins a player needs to win the whole game.
 let winningScore: Int = 3
 
 // For testing only. 0 means the computer picks at random.
-// Set it to 1 (Rock), 2 (Paper) or 3 (Scissors) to make the computer always pick that move.
+// Set it to 1 (Dragon), 2 (Spellbook) or 3 (Wand) to make the computer always pick that move.
 let testNumber: Int = 0
 
 // The game itself: what it remembers, what it shows on the screen,
@@ -36,7 +47,7 @@ struct RockPaperScissorsView: View {
     // Each @State variable is something the game remembers.
     // When one of them changes, the screen updates by itself.
 
-    // The name of each move, such as "Rock", and the emoji that shows it.
+    // The name of each move, such as "Dragon", and the emoji that shows it.
     // Before the first round, nobody has picked a move yet.
     @State var playerMove: String = "No move yet"
     @State var playerEmoji: String = "❓"
@@ -61,16 +72,22 @@ struct RockPaperScissorsView: View {
     // True once someone has reached winningScore. The move buttons stop working.
     @State var gameOver: Bool = false
 
+    // How many rounds in a row the player has won right now.
+    @State var currentStreak: Int = 0
+
+    // The longest winning streak the player has had since the app opened.
+    @State var bestStreak: Int = 0
+
     // MARK: - Computed properties
 
     var body: some View {
         VStack(spacing: 24) {
 
             // The title at the top of the screen.
-            Text("Rock Paper Scissors")
+            Text(gameTitle)
                 .font(.largeTitle)
                 .bold()
-                .foregroundStyle(Color.teal)
+                .foregroundStyle(themeColor)
                 // Shrink the title a little if it does not fit on one line.
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -82,6 +99,10 @@ struct RockPaperScissorsView: View {
             Text("First to \(winningScore) wins")
                 .font(.subheadline)
                 .foregroundStyle(Color.secondary)
+
+            // The player's winning streaks.
+            Text("Streak: \(currentStreak) 🔥   Best: \(bestStreak) ⭐️")
+                .font(.headline)
 
             Spacer()
 
@@ -112,7 +133,7 @@ struct RockPaperScissorsView: View {
                 .frame(maxWidth: .infinity)
             }
             .padding(.vertical)
-            .background(Color.teal.opacity(0.15))
+            .background(themeColor.opacity(0.15))
             .clipShape(RoundedRectangle(cornerRadius: 24))
 
             // The result of the round.
@@ -138,7 +159,7 @@ struct RockPaperScissorsView: View {
                     VStack {
                         Text(rockEmoji)
                             .font(.system(size: 44))
-                        Text("Rock")
+                        Text(rockName)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -149,7 +170,7 @@ struct RockPaperScissorsView: View {
                     VStack {
                         Text(paperEmoji)
                             .font(.system(size: 44))
-                        Text("Paper")
+                        Text(paperName)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -160,25 +181,24 @@ struct RockPaperScissorsView: View {
                     VStack {
                         Text(scissorsEmoji)
                             .font(.system(size: 44))
-                        Text("Scissors")
+                        Text(scissorsName)
                     }
                     .frame(maxWidth: .infinity)
                 }
             }
             .buttonStyle(.bordered)
             .font(.headline)
-            // TRY: Change teal to another colour. Change it in the title and the moves box too.
-            .tint(Color.teal)
+            .tint(themeColor)
             // The buttons cannot be clicked when the game is over.
             .disabled(gameOver)
 
             // This button only appears when the game is over.
             if gameOver {
-                Button("Play again") {
+                Button("New duel") {
                     resetGame()
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(Color.teal)
+                .tint(themeColor)
             }
 
             Text("Rounds played: \(roundsPlayed)")
@@ -188,28 +208,28 @@ struct RockPaperScissorsView: View {
         .padding(32)
         .fontDesign(.rounded)
         // How big the game's window is on the Mac. It can be made taller or wider.
-        .frame(minWidth: 520, minHeight: 640)
+        .frame(minWidth: 520, minHeight: 700)
     }
 
     // MARK: - Functions
 
-    // The player picked rock.
+    // The player picked the rock move (Dragon).
     func chooseRock() {
-        playerMove = "Rock"
+        playerMove = rockName
         playerEmoji = rockEmoji
         playRound()
     }
 
-    // The player picked paper.
+    // The player picked the paper move (Spellbook).
     func choosePaper() {
-        playerMove = "Paper"
+        playerMove = paperName
         playerEmoji = paperEmoji
         playRound()
     }
 
-    // The player picked scissors.
+    // The player picked the scissors move (Wand).
     func chooseScissors() {
-        playerMove = "Scissors"
+        playerMove = scissorsName
         playerEmoji = scissorsEmoji
         playRound()
     }
@@ -226,28 +246,43 @@ struct RockPaperScissorsView: View {
         }
 
         if randomNumber == 1 {
-            computerMove = "Rock"
+            computerMove = rockName
             computerEmoji = rockEmoji
         } else if randomNumber == 2 {
-            computerMove = "Paper"
+            computerMove = paperName
             computerEmoji = paperEmoji
         } else {
-            computerMove = "Scissors"
+            computerMove = scissorsName
             computerEmoji = scissorsEmoji
         }
     }
 
     // Decides who wins a round. It gives back "player", "computer" or "tie".
-    // player and computer are the names of the two moves, such as "Rock".
+    // player and computer are the names of the two moves, such as "Dragon".
+    // Dragon beats Wand, Wand beats Spellbook, Spellbook beats Dragon.
     func decideWinner(player: String, computer: String) -> String {
         if player == computer {
             return "tie"
-        } else if (player == "Rock" && computer == "Scissors")
-                    || (player == "Scissors" && computer == "Paper")
-                    || (player == "Paper" && computer == "Rock") {
+        } else if (player == rockName && computer == scissorsName)
+                    || (player == scissorsName && computer == paperName)
+                    || (player == paperName && computer == rockName) {
             return "player"
         } else {
             return "computer"
+        }
+    }
+
+    // Updates the streaks after a round that was won or lost (not after a tie).
+    // won is true if the player won the round, and false if the player lost.
+    func updateStreak(won: Bool) {
+        if won {
+            currentStreak += 1
+            // A new record? Then the best streak grows too.
+            if currentStreak > bestStreak {
+                bestStreak = currentStreak
+            }
+        } else {
+            currentStreak = 0
         }
     }
 
@@ -259,16 +294,18 @@ struct RockPaperScissorsView: View {
         let winner: String = decideWinner(player: playerMove, computer: computerMove)
 
         if winner == "tie" {
-            // TRY: Change what the game says when there is a tie.
-            result = "It's a tie!"
+            // A tie does not change the streak.
+            result = "The spells cancel out!"
             resultColor = Color.secondary
         } else if winner == "player" {
             playerScore += 1
-            result = "You win this round!"
+            updateStreak(won: true)
+            result = "Your magic wins!"
             resultColor = Color.green
         } else {
             computerScore += 1
-            result = "Computer wins this round!"
+            updateStreak(won: false)
+            result = "The computer's magic wins!"
             resultColor = Color.red
         }
 
@@ -276,14 +313,15 @@ struct RockPaperScissorsView: View {
         if playerScore >= winningScore || computerScore >= winningScore {
             gameOver = true
             if playerScore >= winningScore {
-                result = "You won the game! 🎉"
+                result = "You are the Grand Wizard! 🎉"
             } else {
-                result = "The computer won the game."
+                result = "The computer wins the duel."
             }
         }
     }
 
-    // Starts a brand new game. Everything goes back to how it was at the start.
+    // Starts a brand new game. Everything goes back to how it was at the start,
+    // except bestStreak, which is a record that lasts until the app is closed.
     func resetGame() {
         playerMove = "No move yet"
         playerEmoji = "❓"
@@ -295,6 +333,7 @@ struct RockPaperScissorsView: View {
         playerScore = 0
         computerScore = 0
         gameOver = false
+        currentStreak = 0
     }
 }
 
