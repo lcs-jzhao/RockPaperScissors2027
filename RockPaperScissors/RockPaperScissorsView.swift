@@ -16,6 +16,7 @@
 //  NEW: Ties are counted too, and shown beside the two scores.
 //  NEW: Victory effect. When you win the duel, a trophy pops up over the
 //  duel and the box glows gold. It goes away when a new duel starts.
+//  NEW: Trash talk. After every round the computer teases you with a funny line.
 //
 
 import SwiftUI
@@ -80,6 +81,9 @@ struct RockPaperScissorsView: View {
 
     // True when the player has won the duel. It turns on the victory effect.
     @State var showVictory: Bool = false
+
+    // The funny line the computer says to tease the player.
+    @State var computerSpeech: String = "Ready to lose, little wizard? 😏"
 
     // How many rounds in a row the player has won right now.
     @State var currentStreak: Int = 0
@@ -174,6 +178,15 @@ struct RockPaperScissorsView: View {
                 .foregroundStyle(resultColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
+
+            // What the computer says, in a speech bubble.
+            Text("💬 Computer: \(computerSpeech)")
+                .font(.title3)
+                .italic()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.secondary.opacity(0.15))
+                .clipShape(Capsule())
 
             Spacer()
 
@@ -303,6 +316,33 @@ struct RockPaperScissorsView: View {
         }
     }
 
+    // Picks the funny line the computer says after a round.
+    // winner is "player", "computer" or "tie". round is the number of rounds played.
+    // The remainder of round % 3 is 0, 1 or 2, so the three lines for each result take turns.
+    func computerSays(winner: String, round: Int) -> String {
+        let pick: Int = round % 3
+
+        if winner == "player" && pick == 0 {
+            return "Beginner's luck! 😤"
+        } else if winner == "player" && pick == 1 {
+            return "My wand slipped. Totally not my fault. 🙄"
+        } else if winner == "player" {
+            return "I let you win that one. 😅"
+        } else if winner == "computer" && pick == 0 {
+            return "Too easy! 😎"
+        } else if winner == "computer" && pick == 1 {
+            return "Have you tried... being better? 🤭"
+        } else if winner == "computer" {
+            return "Go back to wizard school! 🏫"
+        } else if pick == 0 {
+            return "Hey, stop copying me! 😠"
+        } else if pick == 1 {
+            return "Great minds think alike. 🤔"
+        } else {
+            return "Jinx! You owe me a potion. 🧪"
+        }
+    }
+
     // Updates the streaks after a round that was won or lost (not after a tie).
     // won is true if the player won the round, and false if the player lost.
     func updateStreak(won: Bool) {
@@ -323,6 +363,7 @@ struct RockPaperScissorsView: View {
         roundsPlayed += 1
 
         let winner: String = decideWinner(player: playerMove, computer: computerMove)
+        computerSpeech = computerSays(winner: winner, round: roundsPlayed)
 
         if winner == "tie" {
             // A tie does not change the streak, but it is counted.
@@ -346,12 +387,14 @@ struct RockPaperScissorsView: View {
             gameOver = true
             if playerScore >= winningScore {
                 result = "You are the Grand Wizard! 🎉"
+                computerSpeech = "Nooo! I demand a rematch! 😭"
                 // Turn on the victory effect, with a bouncy animation.
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.5)) {
                     showVictory = true
                 }
             } else {
                 result = "The computer wins the duel."
+                computerSpeech = "Bow before the new Grand Wizard! 👑"
             }
         }
     }
@@ -371,6 +414,7 @@ struct RockPaperScissorsView: View {
         tieCount = 0
         gameOver = false
         showVictory = false
+        computerSpeech = "Ready to lose, little wizard? 😏"
         currentStreak = 0
     }
 }

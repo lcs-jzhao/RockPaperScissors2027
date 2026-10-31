@@ -1,6 +1,6 @@
 # Magic Duel
 
-A magic-themed Rock Paper Scissors: you duel the computer with a Dragon, a Spellbook and a Wand. The first to win 3 rounds wins the duel, and the screen keeps the score, the ties, and your winning streaks. Win the duel and a trophy pops up!
+A magic-themed Rock Paper Scissors: you duel the computer with a Dragon, a Spellbook and a Wand. The first to win 3 rounds wins the duel, and the screen keeps the score, the ties, and your winning streaks. Win the duel and a trophy pops up! And watch out, the computer trash talks you after every round.
 
 ## How to play
 
@@ -17,6 +17,7 @@ A magic-themed Rock Paper Scissors: you duel the computer with a Dragon, a Spell
 - **Magic theme:** the moves are now Dragon, Spellbook and Wand. The names, emoji, title and main colour are constants at the top of the file, so the whole theme can be changed in one place.
 - **Streaks:** the screen shows my current winning streak and my best streak. The function `updateStreak(won:)` adds 1 for a win, goes back to 0 for a loss, and updates the best streak with an `if`.
 - **Victory effect:** when I win the duel, a 🏆 pops up over the duel with a bouncy animation and the box turns gold. `showVictory` is a `Bool` that turns it on, and "New duel" turns it off.
+- **Trash talk:** after every round the computer says a funny line in a speech bubble, like "Go back to wizard school! 🏫" when it wins or "My wand slipped. Totally not my fault. 🙄" when I win. There are 3 lines for a win, 3 for a loss and 3 for a tie, plus a special line when the duel ends.
 - **Testing switch:** the constant `testNumber` makes the computer always pick the same move, so my tests give the same result every time.
 
 ## How it works
@@ -31,6 +32,10 @@ I'll explain my streak idea, because it uses the most of what we have learned.
 - I used a function with a parameter instead of writing the streak code in both the win branch and the loss branch. The streak rules are in one place, so if I want to change them I only fix one spot.
 - I made the move names (`rockName`, `paperName`, `scissorsName`) constants instead of typing "Dragon", "Spellbook" and "Wand" in several places. `decideWinner`, the buttons and the computer's move all use them, so I can change the whole theme by changing one line at the top.
 - In `decideWinner` I used `&&` and `||` in one `else if` instead of three `else if`s. `&&` means both things are true, like I picked Dragon and the computer picked Wand. `||` means any one of the three ways to win is enough. This way all the ways to win are in one spot and the code is shorter.
+
+**My trash talk idea:** The function `computerSays(winner: String, round: Int) -> String` gets who won and the round number, and gives back the line to show. It saves the line in `computerSpeech`, a `String` that is a `var` because it changes every round. Inside, `let pick: Int = round % 3` uses the remainder, so `pick` is always 0, 1 or 2. Then `else if`s with `&&` check the winner and `pick` together, like `winner == "player" && pick == 1`.
+
+I used `%` instead of `Int.random` so the lines take turns and my tests give the same line every time. I used a function with a return value so `playRound` only needs one line to get the speech.
 
 ## Testing
 
@@ -50,6 +55,13 @@ For these tests I set `testNumber` to the number shown, so the computer always p
 | Victory effect | `testNumber` 3. I choose Dragon three times. | No trophy after 2 wins. After the 3rd win, the 🏆 pops up and the box turns gold. | Pass. No trophy at 2 - 0; at 3 - 0 the trophy popped up and the box turned gold. |
 | No victory effect when I lose | `testNumber` 3. I choose Spellbook three times. | "The computer wins the duel." and no trophy. | Pass. No trophy. |
 | New duel hides the trophy | After the Victory effect test, I click New duel. | The trophy goes away and the box is purple again. | Pass. Trophy gone, box back to purple. |
+| Trash talk at the start | I open the game. | The bubble says "Ready to lose, little wizard? 😏" | Pass. It said "Ready to lose, little wizard? 😏" |
+| Trash talk when I win | `testNumber` 3. I choose Dragon twice. | Round 1: "My wand slipped. Totally not my fault. 🙄" Round 2: "I let you win that one. 😅" | Pass. Both lines showed, in that order. |
+| Trash talk, 3rd line for a win | `testNumber` 3. I choose Wand, Wand, then Dragon. | Round 3: "Beginner's luck! 😤" | Pass. It said "Beginner's luck! 😤" |
+| Trash talk when I lose | `testNumber` 3. I choose Spellbook twice. | Round 1: "Have you tried... being better? 🤭" Round 2: "Go back to wizard school! 🏫" | Pass. Both lines showed, in that order. |
+| Trash talk, 3rd line for a loss | `testNumber` 3. I choose Dragon, Dragon, then Spellbook. | Round 3: "Too easy! 😎" | Pass. It said "Too easy! 😎" |
+| Trash talk on a tie | `testNumber` 3. I choose Wand three times. | "Great minds think alike. 🤔", then "Jinx! You owe me a potion. 🧪", then "Hey, stop copying me! 😠" | Pass. All three showed, in that order. |
+| Trash talk when the duel ends | `testNumber` 3. I choose Dragon three times, then New duel. Then Spellbook three times. | When I win: "Nooo! I demand a rematch! 😭" After New duel: "Ready to lose, little wizard? 😏" When the computer wins: "Bow before the new Grand Wizard! 👑" | Pass. All three showed. |
 | Wand beats Spellbook | `testNumber` 2 (Spellbook). I choose Wand. | "Your magic wins!" in green; my score goes up by 1. |  Pass. "Your magic wins!" in green; You 1 - 0 Computer. |
 | Spellbook beats Dragon | `testNumber` 1 (Dragon). I choose Spellbook. | "Your magic wins!" in green; my score goes up by 1. |  Pass. "Your magic wins!" in green; You 1 - 0 Computer. |
 
