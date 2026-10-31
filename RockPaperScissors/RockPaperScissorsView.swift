@@ -13,6 +13,9 @@
 //  NEW: Magic theme. The moves are Dragon (rock), Spellbook (paper) and Wand (scissors).
 //  The names, emoji, title and colour are constants at the top of the file.
 //  NEW: Streaks. The screen shows your current winning streak and your best streak.
+//  NEW: Ties are counted too, and shown beside the two scores.
+//  NEW: Victory effect. When you win the duel, a trophy pops up over the
+//  duel and the box glows gold. It goes away when a new duel starts.
 //
 
 import SwiftUI
@@ -69,8 +72,14 @@ struct RockPaperScissorsView: View {
     // How many rounds the computer has won in this game.
     @State var computerScore: Int = 0
 
+    // How many rounds in this game ended in a tie.
+    @State var tieCount: Int = 0
+
     // True once someone has reached winningScore. The move buttons stop working.
     @State var gameOver: Bool = false
+
+    // True when the player has won the duel. It turns on the victory effect.
+    @State var showVictory: Bool = false
 
     // How many rounds in a row the player has won right now.
     @State var currentStreak: Int = 0
@@ -96,6 +105,9 @@ struct RockPaperScissorsView: View {
             Text("You \(playerScore) - \(computerScore) Computer")
                 .font(.title2)
                 .bold()
+            Text("Ties: \(tieCount)")
+                .font(.headline)
+                .foregroundStyle(Color.secondary)
             Text("First to \(winningScore) wins")
                 .font(.subheadline)
                 .foregroundStyle(Color.secondary)
@@ -133,8 +145,27 @@ struct RockPaperScissorsView: View {
                 .frame(maxWidth: .infinity)
             }
             .padding(.vertical)
-            .background(themeColor.opacity(0.15))
+            // The box glows gold when the player wins the duel.
+            .background(showVictory ? Color.yellow.opacity(0.35) : themeColor.opacity(0.15))
             .clipShape(RoundedRectangle(cornerRadius: 24))
+            // The victory effect: a trophy that pops up over the duel.
+            .overlay {
+                if showVictory {
+                    VStack(spacing: 4) {
+                        Text("🏆")
+                            .font(.system(size: 110))
+                        Text("✨ Victory! ✨")
+                            .font(.title)
+                            .bold()
+                            .foregroundStyle(Color.orange)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.yellow.opacity(0.85))
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                    // It grows from small to full size as it appears.
+                    .transition(.scale(scale: 0.1).combined(with: .opacity))
+                }
+            }
 
             // The result of the round.
             Text(result)
@@ -294,7 +325,8 @@ struct RockPaperScissorsView: View {
         let winner: String = decideWinner(player: playerMove, computer: computerMove)
 
         if winner == "tie" {
-            // A tie does not change the streak.
+            // A tie does not change the streak, but it is counted.
+            tieCount += 1
             result = "The spells cancel out!"
             resultColor = Color.secondary
         } else if winner == "player" {
@@ -314,6 +346,10 @@ struct RockPaperScissorsView: View {
             gameOver = true
             if playerScore >= winningScore {
                 result = "You are the Grand Wizard! 🎉"
+                // Turn on the victory effect, with a bouncy animation.
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.5)) {
+                    showVictory = true
+                }
             } else {
                 result = "The computer wins the duel."
             }
@@ -332,7 +368,9 @@ struct RockPaperScissorsView: View {
         roundsPlayed = 0
         playerScore = 0
         computerScore = 0
+        tieCount = 0
         gameOver = false
+        showVictory = false
         currentStreak = 0
     }
 }
